@@ -1,0 +1,328 @@
+1. TOKEN DECIMALS FIX
+
+
+function formatToken(amount, decimals) {
+  return Number(amount / 10 ** decimals).toLocaleString("en-US");
+}
+
+
+2.TOKEN LOGO AUTO-FETCH
+Tambahkan fungsi:
+* Untuk EVM: ambil logo dari TrustWallet assets url: https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/<address>/logo.png 
+* Untuk Solana: ambil logo via https://api.solana.fm/v0/tokens/<mint> atau https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/<mint>/logo.png.    
+* 3. HOLDERS FIX (SEPERTI ETHERSCAN / SOLSCAN)
+Perbaiki fungsi holder counter:
+* Untuk EVM: hitung holders menggunakan event Transfer indexing:
+    * address yang muncul di to dan from 
+    * filtered by balance > 0 
+    * gunakan eth_getLogs dengan pagination 
+* Untuk Solana: hitung holders via:
+    * getTokenLargestAccounts 
+    * filter amount > 0 
+Tambahkan cache untuk menghindari rate limit.
+
+4. REAL-TIME TRANSACTION FEED
+Tambahkan fitur:
+EVM
+Gunakan WebSocket RPC:
+
+provider = new ethers.WebSocketProvider(WSS_RPC);
+provider.on("pending", (txHash) => { ... });
+
+Tampilkan:
+* hash 
+* from 
+* to 
+* value (format decimal) 
+* timestamp 
+* status 
+* jika token transfer: decode event 
+Solana
+Gunakan:
+Terapkan chart token price + volume:
+* Gunakan Chart.js 
+* Update setiap 10–20 detik 
+* Data source:
+    * Dexscreener API 
+    * GeckoTerminal API 
+Gunakan format:
+setInterval(fetchPriceUpdate, 15000);
+6. GEMINI AI SUMMARIZER FIX
+Pastikan integrasi Gemini mengikuti:
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+const result = await model.generateContent(`Summarize this token: ...`);
+Task:
+* Pastikan API key dibaca dari Replit Secrets 
+* Pastikan response diplot ke UI 
+* Pastikan error handling diperbaiki 
+7. TOKEN PAGE LAYOUT UPGRADE
+Buat agar setiap token page punya:
+* Logo 
+* Token name 
+* Symbol 
+* Decimals 
+* Price (live) 
+* Marketcap 
+* 24h change 
+* Chart 
+* Holders count 
+* Total supply (formatted) 
+* Max supply 
+* Transfers list live update 
+* Contract source verification (if applicable) 
+8. ETHERSCAN / SOLSCAN-LIKE TX LIST
+Tambahkan tabel:
+Hash	From	To	Amount	Block	Time	Type
+9. CODE ORGANIZATION
+Refactor agar folder structured:
+/src
+  /api
+  /utils
+  /chains
+  /components
+/public
+  /assets
+10. UNIVERSAL IMPROVEMENT
+* Tambahkan loading state 
+* Tambahkan error state 
+* Gunakan async-await everywhere 
+* Hindari blocking requests 
+* Implement retry logic untuk RPC 
+Siap — untuk fitur klik alamat/kontrak → membuka halaman detail kontrak seperti Etherscan, aku buatkan prompt Replit Agent tambahan yang 100% fokus pada:
+✔ Halaman detail kontrak
+✔ Halaman detail wallet
+✔ Halaman detail token
+✔ Halaman detail transaksi
+✔ Auto-routing seperti Etherscan
+✔ Bisa menerima address EVM atau Solana otomatis
+✔ Menampilkan seluruh informasi teknis kontrak
+
+🚀 PROMPT TAMBAHAN UNTUK REPLIT AGENT
+(tambahkan setelah prompt sebelumnya atau kirim sebagai command baru)
+
+PROMPT: “CONTRACT EXPLORER & CLICKABLE ADDRESS SYSTEM (ETHERSCAN-LIKE)”
+Goal: Tambahkan fitur untuk setiap alamat, kontrak, wallet, token, dan tx hash agar bisa diklik dan langsung membuka halaman detail seperti Etherscan / Solscan dengan routing otomatis.
+
+11. CLICKABLE ADDRESS SYSTEM
+Semua elemen berikut harus otomatis jadi link:
+* Address 
+* Contract 
+* Wallet 
+* Token mint 
+* TX Hash 
+Contoh di UI:
+
+<a href="/address/<address>">0x1234...abcd</a>
+<a href="/tx/<hash>">0x9fbc...</a>
+<a href="/token/<address>">Token Name</a>
+
+Gunakan router sederhana:
+
+/address/:addr
+/contract/:addr
+/token/:addr
+/wallet/:addr
+/tx/:hash
+
+Replit agent harus membuat handler route masing-masing.
+
+12.Untuk EVM:
+Halaman harus menampilkan:
+📌 Basic Info
+* Contract address 
+* Verified/unverified status 
+* Creator address 
+* Creation transaction hash 
+* Compiler version 
+* Open-source code (jika verified) 
+* Read Contract (ABI functions) 
+* Write Contract (jika user hubungkan wallet) 
+📌 Token Info (jika ERC20/ERC721)
+* Name 
+* Symbol 
+* Decimals 
+* Total supply (formatted) 
+* Holders count 
+* Transfers count 
+* Logo (auto-fetch) 
+📌 Analytics
+* Recent transfers 
+* Holders 
+* Distribution pie chart 
+* Contract events (decoded) 
+13. WALLET DETAIL PAGE
+Mirip Etherscan:
+📌 Wallet Overview
+* Address 
+* ETH/SOL balance 
+* Tokens owned (list) 
+* NFTs owned (list) 
+📌 Transactions
+* Incoming/outgoing transfers 
+* Token transfers 
+* Internal transactions 
+* Staking/DeFi activity 
+📌 Realtime feed
+Gunakan WebSocket RPC.
+
+14. TRANSACTION DETAIL PAGE
+Harus menampilkan data lengkap seperti Etherscan:
+📌 Basic
+* Hash 
+* Block number 
+* Timestamp 
+* Status (success/failed) 
+* Gas used / gas price 
+* Nonce 
+📌 Participants
+* From 
+* To 
+* Token transferred 
+* Amount (formatted decimals) 
+* Logs decoded (event name + args) 
+15. AI SUMMARY FOR CONTRACT
+Integrasikan Gemini untuk summary kontrak:
+Prompt:
+Analyze this blockchain contract:
+- purpose
+- tokenomics
+- risk level
+- suspicious patterns
+- key features
+- owner privileges
+
+16. SOLANA SUPPORT
+Jika address panjang 44 chars → Solana mode.
+Detail page harus mencakup:
+* Mint metadata 
+* Token supply 
+* Holders (largest accounts) 
+* Token extensions (if any) 
+* Recent transactions 
+* Decoded program logs 
+
+17. AUTO-DETECT ADDRESS TYPE
+Tambahkan fungsi:
+function detectAddressType(address) {
+  if (/^0x[a-fA-F0-9]{40}$/.test(address)) return "evm";
+  if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) return "solana";
+  return "unknown";
+}
+Router otomatis memilih handler
+
+18. GLOBAL ROUTING & LINKS
+Setiap elemen yang berasal dari blockchain harus clickable:
+Dalam tabel tx:
+* from → /address/0xabc 
+* to → /address/0xdef 
+* value → “show token” 
+* hash → /tx/hash 
+* token → /token/address 
+
+19. OPTIONAL (kalau kamu mau)
+Agent juga bisa:
+✔ menambahkan decoder ERC20 / ERC721 / ERC1155 ✔ menambahkan decoder events dengan ABI auto-fetch (via Sourcify) ✔ menambahkan “Contract Source Viewer” seperti Etherscan ✔ menambahkan search bar universal seperti Etherscan
+
+
+20. Tambahkan Grafik Distribusi Holders
+Buat grafik pie chart atau doughnut chart yang menampilkan pembagian holders:
+* Whale holders (≥ 1%) 
+* Large holders (0.1% – 1%) 
+* Medium holders (0.01% – 0.1%) 
+* Small holders (< 0.01%) 
+Data bisa dihitung dari balances yang sudah kamu fetch.
+
+21. Gunakan Chart.js Gradient Color
+Buat gradient dari:
+* #001B48 (biru tua) 
+* #0056A6 (medium) 
+* #4AA8FF (biru muda) 
+* #D6EBFF (biru paling muda) 
+Contoh gradient code yang agent harus masukkan:
+const ctx = document.getElementById("holdersChart").getContext("2d");
+
+const gradient1 = ctx.createLinearGradient(0,0,0,300);
+gradient1.addColorStop(0, "#001B48"); 
+gradient1.addColorStop(1, "#0056A6");
+
+const gradient2 = ctx.createLinearGradient(0,0,0,300);
+gradient2.addColorStop(0, "#0056A6"); 
+gradient2.addColorStop(1, "#4AA8FF");
+
+const gradient3 = ctx.createLinearGradient(0,0,0,300);
+gradient3.addColorStop(0, "#4AA8FF"); 
+gradient3.addColorStop(1, "#D6EBFF");
+
+const gradient4 = ctx.createLinearGradient(0,0,0,300);
+gradient4.addColorStop(0, "#D6EBFF"); 
+gradient4.addColorStop(1, "#F7FAFF");
+
+23. Buat Chart yang Smooth
+Instruksi untuk Replit agent:
+* Gunakan borderRadius: 12 
+* Gunakan hoverOffset: 12 
+* Smooth animation 800–1200ms 
+* Gunakan efek shadow lembut 
+* Ubah teardown agar chart auto-update 
+Contoh config:
+new Chart(ctx, {
+  type: "doughnut",
+  data: {
+    labels: ["Whales", "Large", "Medium", "Small"],
+    datasets: [{
+      data: holdersData,
+      backgroundColor: [
+        gradient1,
+        gradient2,
+        gradient3,
+        gradient4
+      ],
+      borderWidth: 0,
+      hoverOffset: 12,
+      borderRadius: 10
+    }]
+  },
+  options: {
+    cutout: "55%",
+    animation: {
+      animateRotate: true,
+      animateScale: true,
+      duration: 1200
+    },
+    plugins: {
+      legend: {
+        position: "bottom",
+        labels: {
+          color: "#003366",
+          font: { size: 14 }
+        }
+      }
+    }
+  }
+});
+24. Buat Grafik Responsif & Clean
+Instruksi tambahan untuk agent:
+* Pastikan canvas wrapper memakai width: 100% 
+* Gunakan responsive: true di Chart.js 
+* Pastikan chart tetap smooth saat browser resize 
+* Tambahkan padding 20–30px pada card UI 
+25.5. Integrasi Dengan Holders Calculation
+Gunakan hasil holders breakdown (whale/large/medium/small) dari backend atau API internal.
+Jika belum ada, buat fungsi:
+function classifyHolders(balances, totalSupply) {
+  let whale = 0, large = 0, medium = 0, small = 0;
+
+  balances.forEach(b => {
+    const pct = b / totalSupply;
+    if (pct >= 0.01) whale++;
+    else if (pct >= 0.001) large++;
+    else if (pct >= 0.0001) medium++;
+    else small++;
+  });
+
+  return [whale, large, medium, small];
+}
