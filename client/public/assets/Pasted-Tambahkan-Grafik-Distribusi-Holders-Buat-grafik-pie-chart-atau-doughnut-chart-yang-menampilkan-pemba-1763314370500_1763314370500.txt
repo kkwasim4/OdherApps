@@ -1,0 +1,98 @@
+Tambahkan Grafik Distribusi Holders
+Buat grafik pie chart atau doughnut chart yang menampilkan pembagian holders:
+* Whale holders (≥ 1%) 
+* Large holders (0.1% – 1%) 
+* Medium holders (0.01% – 0.1%) 
+* Small holders (< 0.01%) 
+Data bisa dihitung dari balances yang sudah kamu fetch.
+
+21. Gunakan Chart.js Gradient Color
+Buat gradient dari:
+* #001B48 (biru tua) 
+* #0056A6 (medium) 
+* #4AA8FF (biru muda) 
+* #D6EBFF (biru paling muda) 
+Contoh gradient code yang agent harus masukkan:
+const ctx = document.getElementById("holdersChart").getContext("2d");
+
+const gradient1 = ctx.createLinearGradient(0,0,0,300);
+gradient1.addColorStop(0, "#001B48"); 
+gradient1.addColorStop(1, "#0056A6");
+
+const gradient2 = ctx.createLinearGradient(0,0,0,300);
+gradient2.addColorStop(0, "#0056A6"); 
+gradient2.addColorStop(1, "#4AA8FF");
+
+const gradient3 = ctx.createLinearGradient(0,0,0,300);
+gradient3.addColorStop(0, "#4AA8FF"); 
+gradient3.addColorStop(1, "#D6EBFF");
+
+const gradient4 = ctx.createLinearGradient(0,0,0,300);
+gradient4.addColorStop(0, "#D6EBFF"); 
+gradient4.addColorStop(1, "#F7FAFF");
+
+23. Buat Chart yang Smooth
+Instruksi untuk Replit agent:
+* Gunakan borderRadius: 12 
+* Gunakan hoverOffset: 12 
+* Smooth animation 800–1200ms 
+* Gunakan efek shadow lembut 
+* Ubah teardown agar chart auto-update 
+Contoh config:
+new Chart(ctx, {
+  type: "doughnut",
+  data: {
+    labels: ["Whales", "Large", "Medium", "Small"],
+    datasets: [{
+      data: holdersData,
+      backgroundColor: [
+        gradient1,
+        gradient2,
+        gradient3,
+        gradient4
+      ],
+      borderWidth: 0,
+      hoverOffset: 12,
+      borderRadius: 10
+    }]
+  },
+  options: {
+    cutout: "55%",
+    animation: {
+      animateRotate: true,
+      animateScale: true,
+      duration: 1200
+    },
+    plugins: {
+      legend: {
+        position: "bottom",
+        labels: {
+          color: "#003366",
+          font: { size: 14 }
+        }
+      }
+    }
+  }
+});
+24. Buat Grafik Responsif & Clean
+Instruksi tambahan untuk agent:
+* Pastikan canvas wrapper memakai width: 100% 
+* Gunakan responsive: true di Chart.js 
+* Pastikan chart tetap smooth saat browser resize 
+* Tambahkan padding 20–30px pada card UI 
+25.5. Integrasi Dengan Holders Calculation
+Gunakan hasil holders breakdown (whale/large/medium/small) dari backend atau API internal.
+Jika belum ada, buat fungsi:
+function classifyHolders(balances, totalSupply) {
+  let whale = 0, large = 0, medium = 0, small = 0;
+
+  balances.forEach(b => {
+    const pct = b / totalSupply;
+    if (pct >= 0.01) whale++;
+    else if (pct >= 0.001) large++;
+    else if (pct >= 0.0001) medium++;
+    else small++;
+  });
+
+  return [whale, large, medium, small];
+}

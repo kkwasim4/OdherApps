@@ -1,0 +1,85 @@
+EXECUTIVE SUMMARY 
+
+— Versi Singkat & Non-Teknis
+
+
+Project Name : Odher Chain cross intelegent ChainVision AI adalah sebuah platform intelijen on-chain yang memungkinkan pengguna memasukkan satu alamat kontrak apa pun—baik dari jaringan EVM (Ethereum,base,binance smartchain,polygon,dan optimism ) maupun Solana—dan mendapatkan data terverifikasi secara instan, termasuk:
+* Identitas chain asal kontrak 
+* Metadata token (nama, simbol, supply, decimals) 
+* Status verifikasi kontrak 
+* Likuiditas asli dari DEX (Uniswap, PancakeSwap, Raydium, dll.) 
+* Distribusi holder & kepemilikan LP 
+* Peringatan risiko (honeypot, owner privileges, tax, mint authority) 
+* Ringkasan cerdas menggunakan AI 
+Masalah yang dipecahkan:
+* Informasi token tersebar di banyak explorer (Etherscan, BscScan, BaseScan, Solscan). 
+* Setiap chain memiliki cara pencarian yang berbeda → lambat dan membingungkan. 
+* Tidak ada satu platform yang langsung memberikan likuiditas nyata dan risiko kontrak dalam satu tampilan. 
+* Banyak token scam memanfaatkan kebodohan pengguna karena data sulit diverifikasi. 
+Solusi ChainVision AI: Satu input (alamat) → satu output lengkap & akurat. Platform ini menyederhanakan analisis on-chain sehingga pemula dan profesional dapat mengambil keputusan dengan cepat, aman, dan efisien.
+
+(2) TECHNICAL SUMMARY — Versi Teknis untuk Developer/Investor
+Arsitektur Sistem
+1. Multi-Chain Dispatcher
+* Modul yang menerima alamat kontrak dan melakukan chain-probing paralel ke 23 RPC EVM + Solana. 
+* Auto-detect chain berdasarkan:
+    * respons eth_getCode(), 
+    * struktur address, 
+    * RPC signature validity. 
+2. EVM Worker (chains)
+Menggunakan ethers.js / web3:
+* Membaca bytecode (getCode) 
+* Membaca metadata ERC-20/ERC-721:
+    * name(), symbol(), decimals(), totalSupply() 
+* Cek verifikasi kontrak (via scanner APIs) 
+* Enumerasi fungsi (owner, mint, blacklist, trading tax) 
+* Simulasi transaksi (read-only honeypot detection) 
+3. Solana Worker
+Menggunakan @solana/web3.js:
+* getParsedAccountInfo() 
+* getTokenSupply() 
+* getTokenLargestAccounts() 
+* Membaca mintAuthority dan freezeAuthority → penting untuk mendeteksi scam mintable tokens. 
+4. Liquidity Scanner Engine
+Mendeteksi dan menghitung likuiditas nyata token:
+EVM (Uniswap-V2 style)
+* Query factory.getPair(token, WETH) 
+* Baca getReserves() 
+* Hitung nilai USD via reference pools:
+    * WETH/USDC 
+    * WBNB/USDT 
+    * WMATIC/USDC 
+* Menjumlahkan likuiditas multi-DEX. 
+Solana (Raydium / Orca)
+* Scan AMM pool accounts (Program ID) 
+* Konversi harga via USDC pools 
+5. Risk Analysis Engine
+Heuristik teknis:
+* Owner Privilege Detection
+    * owner(), transferOwnership(), mint(), setTax(), blacklist/whitelist 
+* LP Ownership
+    * LP tokens held by owner = risiko rugpull 
+* Code Pattern Matching
+    * Honeypot behavior 
+    * Trading tax tinggi 
+* Chain Parity Check
+    * Cross-verify totalSupply dengan explorer 
+Menghasilkan Risk Score (1–100).
+6. AI Intelligence Layer
+Model LLM digunakan hanya untuk merangkum, bukan sumber fakta.
+Input: JSON berisi data terverifikasi. Output:
+* Ringkasan singkat 
+* Peringatan risiko paling penting 
+* Kejelasan untuk pemula 
+7. Caching Layer
+* Redis / Upstash / Memory cache 
+* TTL:
+    * metadata: 6–12 jam 
+    * likuiditas: 1–5 menit 
+    * risk scan: 30 menit 
+8. API Layer
+REST API endpoints:
+* POST /analyze 
+* GET /token/:address 
+* GET /liquidity/:address 
+* GET /risk/:address 
